@@ -1,4 +1,5 @@
 import requests
+import json
 from bs4 import BeautifulSoup
 
 class Item:
@@ -9,6 +10,16 @@ class Item:
         self.price = price
         self.contents=contents
         self.attributes={}
+    def serialize(self):
+        return {
+            'model':self.model,
+            'name':self.name,
+            'url':self.url,
+            'price':self.price,
+            'contents':self.contents,
+            'attributes':self.attributes
+
+        }
 
 
 
@@ -37,6 +48,8 @@ class Shopv:
 
     def get_pages(self):
         nav = self.soup.find_all("td", class_="pagenav")
+        if len(nav)==1:
+            return 1
         return int((len(nav[0].contents) - 1) / 2)
 
     def extract_products(self):

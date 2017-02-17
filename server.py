@@ -3,12 +3,96 @@ from flask import Flask, jsonify, request
 import extractproducts
 import json
 import os
+from celery import Celery
 
 
-port = int(os.environ.get("PORT", 5000))
+
 
 
 app = Flask(__name__)
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6600',
+    CELERY_RESULT_BACKEND='redis://localhost:6600'
+)
+
+def make_celery(app):
+    celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
+                    broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery
+
+celery = make_celery(app)
+
+@celery.task(name="celerytasks.cpu")
+def cpu():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/procesoriai-stac-komp-procesoriai-desktop-cpu-c-86_85_182_584.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.motherboard")
+def motherboard():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/pagrindines-plokstes-priedai-pagrindines-plokstes-c-86_85_826_248.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.cooler")
+def cooler():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/ausintuvai-procesoriu-ausintuvai-c-86_85_116_115.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.casecooler")
+def casecooler():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/ausintuvai-sisteminiai-korpusu-c-86_85_116_111.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.ram")
+def ram():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/operatyvine-atmintis-stac-komp-atmintis-dimm-c-86_85_217_419.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.hdd")
+def hdd():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/vidiniai-duomenu-kaupikliai-hdd-ssd-priedai-magnetiniai-standieji-diskai-hdd-c-86_85_1407_139.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.sdd")
+def sdd():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/vidiniai-duomenu-kaupikliai-hdd-ssd-priedai-ssd-tipo-kaupikliai-solidstate-drive-c-86_85_1407_1408.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.gpu")
+def gpu():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/vaizdo-plokstes-priedai-vaizdo-plokstes-vga-c-86_85_197_284.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.case")
+def case():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/korpusai-priedai-korpusai-c-86_85_274_510.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+@celery.task(name="celerytasks.psu")
+def psu():
+    a = extractproducts.Shopv(
+        'http://www.skytech.lt/kompiuteriu-komponentai-maitinimo-blokai-c-86_85_300.html?sand=0&pav=0&sort=5a&grp=1')
+    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+
+
+
 
 
 @app.route('/', methods=['GET'])
@@ -29,58 +113,40 @@ def index_route():
     })
 
 
-@app.route('/cpu')
-def cpu():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/procesoriai-stac-komp-procesoriai-desktop-cpu-c-86_85_182_584.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/motherboard')
-def motherboard():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/pagrindines-plokstes-priedai-pagrindines-plokstes-c-86_85_826_248.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/cooler')
-def cooler():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/ausintuvai-procesoriu-ausintuvai-c-86_85_116_115.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/casecooler')
-def casecooler():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/ausintuvai-sisteminiai-korpusu-c-86_85_116_111.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/ram')
-def ram():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/operatyvine-atmintis-stac-komp-atmintis-dimm-c-86_85_217_419.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/hdd')
-def hdd():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/vidiniai-duomenu-kaupikliai-hdd-ssd-priedai-magnetiniai-standieji-diskai-hdd-c-86_85_1407_139.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/ssd')
-def sdd():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/vidiniai-duomenu-kaupikliai-hdd-ssd-priedai-ssd-tipo-kaupikliai-solidstate-drive-c-86_85_1407_1408.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/gpu')
-def gpu():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/vaizdo-plokstes-priedai-vaizdo-plokstes-vga-c-86_85_197_284.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/case')
-def case():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/korpusai-priedai-korpusai-c-86_85_274_510.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
-@app.route('/psu')
-def psu():
-    a = extractproducts.Shopv(
-        'http://www.skytech.lt/kompiuteriu-komponentai-maitinimo-blokai-c-86_85_300.html?sand=0&pav=0&sort=5a&grp=1')
-    return json.dumps([ob.__dict__ for ob in a.extract_all_products()])
+
+fuct = {
+            'cpu': cpu,
+            'motherboard': motherboard,
+            'cooler': cooler,
+            'case cooler': casecooler,
+            'ram': ram,
+            'hdd': hdd,
+            'sdd': sdd,
+            'gpu': gpu,
+            'case': case,
+            'psu': psu
+        }
+
+
+
+
+@app.route('/<functionname>/<resultid>')
+def result(functionname,resultid):
+    retval = fuct[functionname].AsyncResult(resultid).get(timeout=1.0)
+    return repr(retval)
+
+
+
+
+@app.route('/<part>')
+def part(part):
+    res=fuct[part].apply_async()
+    return jsonify(result=res.task_id)
+
+
+
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=True)
 
 

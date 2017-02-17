@@ -1,5 +1,5 @@
 import requests
-import json
+
 from bs4 import BeautifulSoup
 
 class Item:
@@ -24,7 +24,7 @@ class Item:
 
 
 
-class Shopv:
+class Shopv():
     def __init__(self,url):
         self.items=[]
         self.url=url
@@ -48,7 +48,7 @@ class Shopv:
 
     def get_pages(self):
         nav = self.soup.find_all("td", class_="pagenav")
-        if len(nav)==1:
+        if len(nav[0].contents)==1:
             return 1
         return int((len(nav[0].contents) - 1) / 2)
 
@@ -76,6 +76,7 @@ class Shopv:
             results[a.next_element.text] = a.next_element.next_sibling.text
         return results
 
+
     def extract_all_products(self):
         for self.currentpage in range(1,self.total_pages+1):
             self.soup = self.get_soup()
@@ -86,8 +87,6 @@ class Shopv:
     def get_all_product_attributes(self):
         for item in self.items:
             item.attributes=self.extract_product_info(item.url)
-
-
 
 
 

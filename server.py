@@ -132,8 +132,10 @@ fuct = {
 
 @app.route('/<functionname>/<resultid>')
 def result(functionname,resultid):
-    retval = fuct[functionname].AsyncResult(resultid).get(timeout=1.0)
-    return repr(retval)
+
+    if fuct[functionname].AsyncResult(resultid).ready():
+        return repr(fuct[functionname].AsyncResult(resultid).result)
+    return repr("Loading")
 
 
 

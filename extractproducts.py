@@ -3,24 +3,15 @@ import requests
 from bs4 import BeautifulSoup
 
 class Item:
-    def __init__(self,model,name,url,contents,price):
+    def __init__(self,model,name,url,contents,eu,lt):
         self.model= model
         self.name = name
         self.url = url
-        self.price = price
+        self.price={}
+        self.price['eu']= eu
+        self.price['lt']= lt
         self.contents=contents
         self.attributes={}
-    def serialize(self):
-        return {
-            'model':self.model,
-            'name':self.name,
-            'url':self.url,
-            'price':self.price,
-            'contents':self.contents,
-            'attributes':self.attributes
-
-        }
-
 
 
 
@@ -58,7 +49,14 @@ class Shopv():
         for a in items:
             if "group" in a["class"]:
                 continue
-            t= Item(a.contents[1].text,a.contents[5].text,'http://www.skytech.lt/'+a.contents[5].next['href'],a.contents[7].text,a.contents[9].text)
+            model= a.contents[1].text.replace('\n','')
+            name=a.contents[5].text.replace('\n','')
+            url='http://www.skytech.lt/'+a.contents[5].next['href'].replace('\n','')
+            contents=a.contents[7].text.replace('\n','')
+            price=a.contents[9].text.replace('\n','').split("€")
+            eu=price[0]+'€'
+            lt=price[1].rstrip()
+            t= Item(model,name,url,contents,eu,lt)
             self.items.append(t)
 
     def extract_product_info(self, url):

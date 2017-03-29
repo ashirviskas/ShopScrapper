@@ -65,7 +65,7 @@ def hdd():
         'http://www.skytech.lt/vidiniai-duomenu-kaupikliai-hdd-ssd-priedai-magnetiniai-standieji-diskai-hdd-c-86_85_1407_139.html?sand=0&pav=0&sort=5a&grp=1')
     return json.dumps([ob.__dict__ for ob in a.extract_all_products()], ensure_ascii=False)
 
-@celery.task(name="celerytasks.sdd")
+@celery.task(name="celerytasks.ssd")
 def sdd():
     a = extractproducts.Shopv(
         'http://www.skytech.lt/vidiniai-duomenu-kaupikliai-hdd-ssd-priedai-ssd-tipo-kaupikliai-solidstate-drive-c-86_85_1407_1408.html?sand=0&pav=0&sort=5a&grp=1')
